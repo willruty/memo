@@ -34,9 +34,12 @@ def ensure_db_initialized():
             error_msg = f"Erro ao inicializar banco: {e}\n{traceback.format_exc()}"
             print(error_msg, file=sys.stderr)
 
-# Cria a pasta de uploads se não existir
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
+# Cria a pasta de uploads se não existir (apenas se não estiver no Vercel)
+if not os.path.exists(app.config['UPLOAD_FOLDER']) and not os.getenv('VERCEL'):
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+    except:
+        pass
 
 
 def login_required(f):
