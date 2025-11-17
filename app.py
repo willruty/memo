@@ -18,8 +18,12 @@ app.secret_key = os.getenv('SECRET_KEY', 'memo-secret-key-change-in-production')
 app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Inicializa o banco de dados
-init_db()
+# Inicializa o banco de dados (com tratamento de erro)
+try:
+    init_db()
+except Exception as e:
+    print(f"Aviso: Erro ao inicializar banco de dados: {e}")
+    print("O banco será inicializado na primeira requisição.")
 
 # Cria a pasta de uploads se não existir
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
