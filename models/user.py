@@ -1,15 +1,8 @@
-"""
-Modelo de Usuário.
-Gerencia operações relacionadas a usuários no banco de dados Supabase.
-"""
-from database import get_db
+from database import get_db, get_cursor
 from werkzeug.security import check_password_hash, generate_password_hash
 import psycopg2
 
 class User:
-    """
-    Classe que representa um usuário do sistema.
-    """
     
     def __init__(self, id=None, name=None, email=None, password_hash=None, created_at=None):
         self.id = id
@@ -20,11 +13,8 @@ class User:
     
     @staticmethod
     def create(name, email, password):
-        """
-        Cria um novo usuário no banco de dados.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         try:
             password_hash = generate_password_hash(password)
@@ -34,7 +24,8 @@ class User:
                 VALUES (%s, %s, %s)
                 RETURNING id
             ''', (name, email, password_hash))
-            user_id = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            user_id = result['id'] if isinstance(result, dict) else result[0]
             
             conn.commit()
             
@@ -57,11 +48,8 @@ class User:
     
     @staticmethod
     def find_by_email(email):
-        """
-        Busca um usuário pelo email.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
         row = cursor.fetchone()
@@ -79,11 +67,8 @@ class User:
     
     @staticmethod
     def find_by_id(user_id):
-        """
-        Busca um usuário pelo ID.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
         row = cursor.fetchone()
@@ -100,17 +85,11 @@ class User:
         return None
     
     def verify_password(self, password):
-        """
-        Verifica se a senha fornecida corresponde ao hash armazenado.
-        """
         return check_password_hash(self.password_hash, password)
     
     def update_password(self, new_password):
-        """
-        Atualiza a senha do usuário.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         password_hash = generate_password_hash(new_password)
         cursor.execute('''
@@ -122,11 +101,8 @@ class User:
         return True
     
     def update_profile(self, name, email):
-        """
-        Atualiza nome e email do usuário.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         try:
             cursor.execute('''
@@ -144,11 +120,8 @@ class User:
             return False
     
     def delete(self):
-        """
-        Remove o usuário do banco de dados.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         cursor.execute('DELETE FROM users WHERE id = %s', (self.id,))
         conn.commit()

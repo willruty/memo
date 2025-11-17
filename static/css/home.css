@@ -37,24 +37,66 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    height: 500px;
 }
 
-.hero-image-placeholder {
+.hero-images-fan {
+    position: relative;
     width: 100%;
     max-width: 500px;
-    height: 400px;
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
-    border-radius: var(--border-radius-large);
+    height: 100%;
     display: flex;
-    align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-lg);
-    border: 0.5px solid var(--border-color);
+    align-items: center;
 }
 
-.hero-image-icon {
-    font-size: 120px;
-    opacity: 0.3;
+.fan-image {
+    position: absolute;
+    width: 320px;
+    height: 420px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    transition: transform 0.3s ease, z-index 0.3s ease;
+}
+
+.fan-image-1 {
+    transform: rotate(0deg);
+    z-index: 3;
+    left: 50%;
+    margin-left: -160px;
+}
+
+.fan-image-2 {
+    transform: rotate(15deg);
+    z-index: 2;
+    left: 50%;
+    margin-left: -160px;
+}
+
+.fan-image-3 {
+    transform: rotate(30deg);
+    z-index: 1;
+    left: 50%;
+    margin-left: -160px;
+}
+
+.fan-image:hover {
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+.fan-image-1:hover {
+    transform: rotate(0deg) scale(1.05);
+}
+
+.fan-image-2:hover {
+    transform: rotate(15deg) scale(1.05);
+}
+
+.fan-image-3:hover {
+    transform: rotate(30deg) scale(1.05);
 }
 
 .hero-actions {
@@ -222,8 +264,19 @@
         font-size: 18px;
     }
 
-    .hero-image-placeholder {
+    .hero-image {
+        height: 350px;
+    }
+
+    .fan-image {
+        width: 220px;
         height: 300px;
+    }
+
+    .fan-image-1,
+    .fan-image-2,
+    .fan-image-3 {
+        margin-left: -110px;
     }
 
     .steps-grid {

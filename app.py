@@ -1,7 +1,3 @@
-"""
-Aplicação Flask principal do sistema Memo.
-Gerencia todas as rotas e requisições HTTP.
-"""
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
 from functools import wraps
 import os
@@ -13,14 +9,11 @@ from controllers.photo_controller import PhotoController
 from models.event import Event
 from models.photo import Photo
 
-# Configuração da aplicação
 app = Flask(__name__, template_folder='views', static_folder='static')
 app.secret_key = os.getenv('SECRET_KEY', 'memo-secret-key-change-in-production')
 app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'uploads')
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
-# Inicializa o banco de dados (com tratamento de erro)
-# No Vercel, a inicialização será feita na primeira requisição
 _db_initialized = False
 
 def ensure_db_initialized():
@@ -30,11 +23,8 @@ def ensure_db_initialized():
             init_db()
             _db_initialized = True
         except Exception as e:
-            import traceback
-            error_msg = f"Erro ao inicializar banco: {e}\n{traceback.format_exc()}"
-            print(error_msg, file=sys.stderr)
+            print(f"⚠️  Aviso: Erro ao inicializar banco: {e}", file=sys.stderr)
 
-# Cria a pasta de uploads se não existir (apenas se não estiver no Vercel)
 if not os.path.exists(app.config['UPLOAD_FOLDER']) and not os.getenv('VERCEL'):
     try:
         os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -43,9 +33,6 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']) and not os.getenv('VERCEL'):
 
 
 def login_required(f):
-    """
-    Decorator para proteger rotas que requerem autenticação.
-    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -55,13 +42,8 @@ def login_required(f):
     return decorated_function
 
 
-# ==================== ROTAS PÚBLICAS ====================
-
 @app.route('/')
 def home():
-    """
-    Página inicial do sistema.
-    """
     try:
         ensure_db_initialized()
     except Exception as e:
@@ -71,9 +53,6 @@ def home():
 
 @app.route('/explorar')
 def explore():
-    """
-    Página de exploração de eventos públicos.
-    """
     try:
         ensure_db_initialized()
         events = Event.find_public_events(limit=20)
@@ -83,21 +62,8 @@ def explore():
     return render_template('explore.html', events=events)
 
 
-@app.route('/como-funciona')
-def how_it_works():
-    """
-    Página explicativa sobre como o sistema funciona.
-    """
-    return render_template('how_it_works.html')
-
-
-# ==================== ROTAS DE AUTENTICAÇÃO ====================
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """
-    Página de login e processamento de login.
-    """
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
@@ -113,7 +79,6 @@ def login():
         else:
             flash(message, 'error')
     
-    # Se já estiver logado, redireciona para o dashboard
     if 'user_id' in session:
         return redirect(url_for('dashboard'))
     
@@ -122,9 +87,6 @@ def login():
 
 @app.route('/cadastro', methods=['GET', 'POST'])
 def register():
-    """
-    Página de cadastro e processamento de registro.
-    """
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip()
@@ -139,7 +101,6 @@ def register():
         else:
             flash(message, 'error')
     
-    # Se já estiver logado, redireciona para o dashboard
     if 'user_id' in session:
         return redirect(url_for('dashboard'))
     
@@ -148,9 +109,6 @@ def register():
 
 @app.route('/redefinir-senha', methods=['GET', 'POST'])
 def reset_password():
-    """
-    Página de redefinição de senha.
-    """
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
         new_password = request.form.get('new_password', '')
@@ -169,22 +127,14 @@ def reset_password():
 
 @app.route('/logout')
 def logout():
-    """
-    Faz logout do usuário e limpa a sessão.
-    """
     session.clear()
     flash('Logout realizado com sucesso!', 'success')
     return redirect(url_for('home'))
 
 
-# ==================== ROTAS DE EVENTOS (PROTEGIDAS) ====================
-
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    """
-    Painel do usuário com lista de seus eventos.
-    """
     user_id = session['user_id']
     events = Event.find_by_user(user_id)
     return render_template('dashboard.html', events=events)
@@ -193,9 +143,6 @@ def dashboard():
 @app.route('/evento/criar', methods=['GET', 'POST'])
 @login_required
 def create_event():
-    """
-    Criação de novo evento.
-    """
     if request.method == 'POST':
         user_id = session['user_id']
         title = request.form.get('title', '').strip()
@@ -205,7 +152,6 @@ def create_event():
         visibility = request.form.get('visibility', 'private').strip()
         
         cover_image = None
-        # Processa upload da imagem de capa se fornecida
         if 'cover_image' in request.files:
             file = request.files['cover_image']
             if file and file.filename:
@@ -232,9 +178,6 @@ def create_event():
 
 @app.route('/evento/<int:event_id>')
 def event_details(event_id):
-    """
-    Detalhes de um evento específico.
-    """
     user_id = session.get('user_id')
     can_view, event = EventController.can_view(event_id, user_id)
     
@@ -252,9 +195,6 @@ def event_details(event_id):
 @app.route('/evento/<int:event_id>/editar', methods=['GET', 'POST'])
 @login_required
 def edit_event(event_id):
-    """
-    Edição de um evento existente.
-    """
     user_id = session['user_id']
     event = Event.find_by_id(event_id)
     
@@ -273,9 +213,8 @@ def edit_event(event_id):
         date = request.form.get('date', '').strip()
         visibility = request.form.get('visibility', 'private').strip()
         
-        cover_image = event.cover_image  # Mantém a imagem atual por padrão
+        cover_image = event.cover_image
         
-        # Processa upload da nova imagem de capa se fornecida
         if 'cover_image' in request.files:
             file = request.files['cover_image']
             if file and file.filename:
@@ -303,9 +242,6 @@ def edit_event(event_id):
 @app.route('/evento/<int:event_id>/excluir', methods=['POST'])
 @login_required
 def delete_event(event_id):
-    """
-    Exclusão de um evento.
-    """
     user_id = session['user_id']
     
     success, message = EventController.delete(event_id, user_id)
@@ -318,14 +254,9 @@ def delete_event(event_id):
     return redirect(url_for('dashboard'))
 
 
-# ==================== ROTAS DE FOTOS (PROTEGIDAS) ====================
-
 @app.route('/evento/<int:event_id>/upload', methods=['POST'])
 @login_required
 def upload_photo(event_id):
-    """
-    Upload de fotos para um evento (suporta múltiplos arquivos).
-    """
     user_id = session['user_id']
     
     if 'photo' not in request.files:
@@ -345,7 +276,7 @@ def upload_photo(event_id):
     for file in files:
         if file.filename:
             success, message, photo = PhotoController.upload(
-                event_id, user_id, file, app.config['UPLOAD_FOLDER']
+                event_id, user_id, file
             )
             
             if success:
@@ -354,7 +285,6 @@ def upload_photo(event_id):
                 error_count += 1
                 error_messages.append(message)
     
-    # Mensagens de feedback
     if success_count > 0:
         if success_count == 1:
             flash(f'{success_count} foto enviada com sucesso!', 'success')
@@ -372,24 +302,37 @@ def upload_photo(event_id):
     return redirect(url_for('event_details', event_id=event_id))
 
 
+@app.route('/photo/<int:photo_id>')
+def get_photo(photo_id):
+    from flask import Response
+    
+    photo = Photo.find_by_id(photo_id)
+    
+    if not photo or not photo.binary_data:
+        return "Foto não encontrada", 404
+    
+    return Response(
+        photo.binary_data,
+        mimetype=photo.content_type,
+        headers={'Content-Disposition': f'inline; filename="{photo.filename}"'}
+    )
+
+
 @app.route('/download/<filename>')
 def download_file(filename):
-    """
-    Download de arquivo (foto) do sistema.
-    """
-    return send_from_directory(
-        app.config['UPLOAD_FOLDER'],
-        filename,
-        as_attachment=False
-    )
+    try:
+        return send_from_directory(
+            app.config['UPLOAD_FOLDER'],
+            filename,
+            as_attachment=False
+        )
+    except Exception:
+        return "Arquivo não encontrado", 404
 
 
 @app.route('/foto/<int:photo_id>/excluir', methods=['POST'])
 @login_required
 def delete_photo(photo_id):
-    """
-    Exclusão de uma foto.
-    """
     user_id = session['user_id']
     photo = Photo.find_by_id(photo_id)
     
@@ -398,7 +341,7 @@ def delete_photo(photo_id):
         return redirect(url_for('dashboard'))
     
     success, message = PhotoController.delete(
-        photo_id, user_id, app.config['UPLOAD_FOLDER']
+        photo_id, user_id
     )
     
     if success:
@@ -409,12 +352,6 @@ def delete_photo(photo_id):
     return redirect(url_for('event_details', event_id=photo.event_id))
 
 
-# ==================== INICIALIZAÇÃO ====================
-
 if __name__ == '__main__':
-    # Inicializa o banco de dados
     init_db()
-    
-    # Executa a aplicação
     app.run(debug=True, host='0.0.0.0', port=5000)
-

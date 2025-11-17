@@ -1,13 +1,6 @@
-"""
-Modelo de Evento.
-Gerencia operações relacionadas a eventos no banco de dados Supabase.
-"""
-from database import get_db
+from database import get_db, get_cursor
 
 class Event:
-    """
-    Classe que representa um evento no sistema.
-    """
     
     def __init__(self, id=None, user_id=None, title=None, description=None, 
                  location=None, date=None, visibility='private', 
@@ -24,11 +17,8 @@ class Event:
     
     @staticmethod
     def create(user_id, title, description, location, date, visibility='private', cover_image=None):
-        """
-        Cria um novo evento no banco de dados.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         try:
             cursor.execute('''
@@ -36,7 +26,8 @@ class Event:
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             ''', (user_id, title, description, location, date, visibility, cover_image))
-            event_id = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            event_id = result['id'] if isinstance(result, dict) else result[0]
             
             conn.commit()
             
@@ -63,11 +54,8 @@ class Event:
     
     @staticmethod
     def find_by_id(event_id):
-        """
-        Busca um evento pelo ID.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         cursor.execute('SELECT * FROM events WHERE id = %s', (event_id,))
         row = cursor.fetchone()
@@ -89,11 +77,8 @@ class Event:
     
     @staticmethod
     def find_by_user(user_id):
-        """
-        Busca todos os eventos de um usuário.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         cursor.execute('''
             SELECT * FROM events 
@@ -122,11 +107,8 @@ class Event:
     
     @staticmethod
     def find_public_events(limit=20):
-        """
-        Busca eventos públicos mais recentes.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         cursor.execute('''
             SELECT e.*, u.name as user_name 
@@ -159,11 +141,8 @@ class Event:
         return events
     
     def update(self, title, description, location, date, visibility, cover_image=None):
-        """
-        Atualiza os dados do evento.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         try:
             if cover_image:
@@ -197,11 +176,8 @@ class Event:
             return False
     
     def delete(self):
-        """
-        Remove o evento do banco de dados.
-        """
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         
         cursor.execute('DELETE FROM events WHERE id = %s', (self.id,))
         conn.commit()
@@ -209,7 +185,4 @@ class Event:
         return True
     
     def is_owner(self, user_id):
-        """
-        Verifica se o usuário é o dono do evento.
-        """
         return self.user_id == user_id
