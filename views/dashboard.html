@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Meus Eventos - Memo{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Meus Eventos</h1>
+        <a href="{{ url_for('create_event') }}" class="btn btn-primary">+ Criar Novo Evento</a>
+    </div>
+
+    {% if events %}
+        <div class="events-grid">
+            {% for event in events %}
+                <div class="event-card">
+                    <div class="event-card-header">
+                        {% if event.cover_image %}
+                            <div class="event-image">
+                                <img src="{{ url_for('download_file', filename=event.cover_image) }}" alt="{{ event.title }}">
+                            </div>
+                        {% else %}
+                            <div class="event-image placeholder">
+                                <span>📷</span>
+                            </div>
+                        {% endif %}
+                        <div class="event-menu-container">
+                            <button class="event-menu-btn" onclick="toggleEventMenu({{ event.id }})" aria-label="Menu de opções">
+                                <span>⋯</span>
+                            </button>
+                            <div class="event-menu-popup" id="menu-{{ event.id }}" style="display: none;">
+                                <a href="{{ url_for('edit_event', event_id=event.id) }}" class="event-menu-item">
+                                    <span>✏️</span>
+                                    <span>Editar</span>
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este evento?');" class="event-menu-item-form">
+                                    <button type="submit" class="event-menu-item event-menu-item-danger">
+                                        <span>🗑️</span>
+                                        <span>Excluir</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="event-content">
+                        <div class="event-header">
+                            <h3><a href="{{ url_for('event_details', event_id=event.id) }}">{{ event.title }}</a></h3>
+                            <span class="badge badge-{{ 'public' if event.visibility == 'public' else 'private' }}">
+                                {{ 'Público' if event.visibility == 'public' else 'Privado' }}
+                            </span>
+                        </div>
+                        <p class="event-meta">
+                            <span>📅 {{ event.date }}</span>
+                            <span>📍 {{ event.location }}</span>
+                        </p>
+                        <p class="event-description">{{ event.description[:150] }}{% if event.description|length > 150 %}...{% endif %}</p>
+                        <div class="event-actions">
+                            <a href="{{ url_for('event_details', event_id=event.id) }}" class="btn btn-primary">Ver Detalhes</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>Você ainda não criou nenhum evento.</p>
+            <a href="{{ url_for('create_event') }}" class="btn btn-primary btn-large">Criar Meu Primeiro Evento</a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleEventMenu(eventId) {
+    var menu = document.getElementById('menu-' + eventId);
+    var allMenus = document.querySelectorAll('.event-menu-popup');
+    
+    // Fecha todos os outros menus
+    allMenus.forEach(function(m) {
+        if (m.id !== 'menu-' + eventId) {
+            m.style.display = 'none';
+        }
+    });
+    
+    // Alterna o menu atual
+    if (menu.style.display === 'none' || menu.style.display === '') {
+        menu.style.display = 'block';
+    } else {
+        menu.style.display = 'none';
+    }
+}
+
+// Fecha o menu ao clicar fora
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.event-menu-container')) {
+        var allMenus = document.querySelectorAll('.event-menu-popup');
+        allMenus.forEach(function(menu) {
+            menu.style.display = 'none';
+        });
+    }
+});
+</script>
+{% endblock %}
+

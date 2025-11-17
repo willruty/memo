@@ -1,0 +1,245 @@
+.hero-landing {
+    padding: 100px 0;
+    background-color: var(--bg-secondary);
+}
+
+.hero-landing-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+    align-items: center;
+}
+
+.hero-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.hero-text h1 {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--primary-base);
+    line-height: 1.2;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.hero-subtitle-landing {
+    font-size: 18px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 500px;
+}
+
+.hero-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-image-placeholder {
+    width: 100%;
+    max-width: 500px;
+    height: 400px;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+    border-radius: var(--border-radius-large);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    border: 0.5px solid var(--border-color);
+}
+
+.hero-image-icon {
+    font-size: 120px;
+    opacity: 0.3;
+}
+
+.hero-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.hero-actions-left {
+    justify-content: flex-start;
+}
+
+.btn-hero {
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.how-it-works-landing {
+    padding: 80px 0;
+    background-color: var(--bg-primary);
+}
+
+.section-title {
+    text-align: center;
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--primary-base);
+    margin-bottom: var(--spacing-xl);
+    letter-spacing: -0.5px;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-xl);
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.step-card {
+    text-align: center;
+    padding: var(--spacing-xl);
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border: 0.5px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.step-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.step-number-landing {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #004aac 0%, #0060df 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 auto var(--spacing-md);
+    box-shadow: var(--shadow);
+}
+
+.step-card h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--primary-base);
+    margin-bottom: var(--spacing-sm);
+}
+
+.step-card p {
+    font-size: 17px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.benefits {
+    padding: 80px 0;
+    background-color: var(--bg-secondary);
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-xl);
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.benefit-card {
+    padding: var(--spacing-xl);
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius);
+    border: 0.5px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: center;
+}
+
+.benefit-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.benefit-icon {
+    font-size: 48px;
+    margin-bottom: var(--spacing-md);
+}
+
+.benefit-card h3 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--primary-base);
+    margin-bottom: var(--spacing-sm);
+}
+
+.benefit-card p {
+    font-size: 17px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.cta-landing {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #004aac 0%, #0060df 100%);
+    color: white;
+    text-align: center;
+}
+
+.cta-landing h2 {
+    font-size: 40px;
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+    color: white;
+}
+
+.cta-landing p {
+    font-size: 20px;
+    margin-bottom: var(--spacing-xl);
+    opacity: 0.95;
+}
+
+.cta-landing .btn {
+    font-size: 18px;
+    padding: 16px 32px;
+}
+
+@media (max-width: 768px) {
+    .hero-landing-content {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xl);
+    }
+
+    .hero-text h1 {
+        font-size: 36px;
+    }
+
+    .hero-subtitle-landing {
+        font-size: 18px;
+    }
+
+    .hero-image-placeholder {
+        height: 300px;
+    }
+
+    .steps-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .benefits-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-title {
+        font-size: 32px;
+    }
+
+    .cta-landing h2 {
+        font-size: 32px;
+    }
+}
+

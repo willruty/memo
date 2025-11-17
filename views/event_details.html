@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }} - Memo{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/event_details.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="event-details">
+        <div class="event-header-detail">
+            <a href="{{ url_for('dashboard') if session.user_id and event.user_id == session.user_id else url_for('explore') }}" class="btn btn-secondary">← Voltar</a>
+            {% if session.user_id and event.user_id == session.user_id %}
+                <div class="event-actions-header">
+                    <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-primary">Editar Evento</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Cover Image - Estilo LinkedIn -->
+        <div class="event-cover-container">
+            {% if event.cover_image %}
+                <img src="{{ url_for('download_file', filename=event.cover_image) }}" alt="Capa do evento" class="event-cover-image">
+            {% else %}
+                <div class="event-cover-placeholder">
+                    <span class="cover-placeholder-icon">📷</span>
+                    <p>Sem foto de capa</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="event-detail-card">
+            <h1>{{ event.title }}</h1>
+            <div class="event-meta-detail">
+                <span>📅 {{ event.date }}</span>
+                <span>📍 {{ event.location }}</span>
+                <span class="badge badge-{{ 'public' if event.visibility == 'public' else 'private' }}">
+                    {{ 'Público' if event.visibility == 'public' else 'Privado' }}
+                </span>
+            </div>
+            <div class="event-description-full">
+                <p>{{ event.description }}</p>
+            </div>
+        </div>
+
+        {% if session.user_id and event.user_id == session.user_id %}
+        <div class="upload-section">
+            <h2>Adicionar Fotos</h2>
+            <form method="POST" action="{{ url_for('upload_photo', event_id=event.id) }}" enctype="multipart/form-data" class="upload-form">
+                <div class="upload-controls">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="photo" name="photo" accept="image/*" multiple required onchange="previewPhotos(this)">
+                        <label for="photo" class="file-label">
+                            <span class="file-label-text">Escolher arquivos</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        <span>Enviar Fotos</span>
+                    </button>
+                </div>
+                <div id="photo-preview-container" class="photo-preview-container" style="display: none;">
+                    <div id="photo-preview-grid" class="photo-preview-grid"></div>
+                    <p class="photo-preview-info">Pré-visualização das fotos selecionadas</p>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="photos-section">
+            <h2>Fotos do Evento</h2>
+            {% if photos %}
+                <div class="photos-grid">
+                    {% for photo in photos %}
+                        <div class="photo-item">
+                            <a href="{{ url_for('download_file', filename=photo.filename) }}" target="_blank">
+                                <img src="{{ url_for('download_file', filename=photo.filename) }}" alt="Foto do evento">
+                            </a>
+                            {% if session.user_id and event.user_id == session.user_id %}
+                                <form method="POST" action="{{ url_for('delete_photo', photo_id=photo.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir esta foto?');">
+                                    <button type="submit" class="btn-delete-photo" title="Excluir foto">×</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>Nenhuma foto adicionada ainda.</p>
+                    {% if session.user_id and event.user_id == session.user_id %}
+                        <p>Use o formulário acima para adicionar fotos ao evento.</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+var selectedFiles = [];
+
+function previewPhotos(input) {
+    var container = document.getElementById('photo-preview-container');
+    var grid = document.getElementById('photo-preview-grid');
+    var files = input.files;
+    
+    if (files && files.length > 0) {
+        selectedFiles = Array.from(files);
+        grid.innerHTML = '';
+        
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            var reader = new FileReader();
+            
+            reader.onload = (function(index, file) {
+                return function(e) {
+                    var wrapper = document.createElement('div');
+                    wrapper.className = 'photo-preview-wrapper';
+                    wrapper.dataset.index = index;
+                    
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = 'Preview ' + (index + 1);
+                    
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn-remove-preview';
+                    btn.innerHTML = '×';
+                    btn.title = 'Remover esta foto';
+                    btn.onclick = function() { removePreviewItem(index); };
+                    
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(btn);
+                    grid.appendChild(wrapper);
+                    
+                    if (index === files.length - 1) {
+                        container.style.display = 'block';
+                    }
+                };
+            })(i, file);
+            
+            reader.readAsDataURL(file);
+        }
+    } else {
+        container.style.display = 'none';
+        grid.innerHTML = '';
+        selectedFiles = [];
+    }
+}
+
+function removePreviewItem(index) {
+    var input = document.getElementById('photo');
+    var dt = new DataTransfer();
+    
+    for (var i = 0; i < selectedFiles.length; i++) {
+        if (i !== index) {
+            dt.items.add(selectedFiles[i]);
+        }
+    }
+    
+    input.files = dt.files;
+    selectedFiles = Array.from(input.files);
+    previewPhotos(input);
+}
+
+function removePreview() {
+    var container = document.getElementById('photo-preview-container');
+    var grid = document.getElementById('photo-preview-grid');
+    var input = document.getElementById('photo');
+    
+    container.style.display = 'none';
+    grid.innerHTML = '';
+    input.value = '';
+    selectedFiles = [];
+}
+</script>
+{% endblock %}
+

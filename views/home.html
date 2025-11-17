@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Memo - Guarde suas memórias de eventos, viagens e festas{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+{% if not session.user_id %}
+<!-- Hero Section -->
+<section class="hero-landing">
+    <div class="container">
+        <div class="hero-landing-content">
+            <div class="hero-text">
+                <h1>Momentos que ficam para sempre</h1>
+                <p class="hero-subtitle-landing">
+                    Preserve cada sorriso, cada abraço, cada aventura. 
+                    Seus momentos mais especiais merecem um lugar especial.
+                </p>
+                <div class="hero-actions hero-actions-left">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-hero">Começar Agora</a>
+                    <a href="{{ url_for('explore') }}" class="btn btn-secondary btn-hero">Explorar</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="hero-image-placeholder">
+                    <span class="hero-image-icon">📸</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Como Funciona - 3 Passos -->
+<section class="how-it-works-landing">
+    <div class="container">
+        <h2 class="section-title">Como Funciona</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number-landing">1</div>
+                <h3>Crie sua conta</h3>
+                <p>Cadastre-se gratuitamente e comece a usar o Memo em poucos segundos.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number-landing">2</div>
+                <h3>Crie eventos</h3>
+                <p>Adicione seus eventos, viagens e festas com título, descrição e data.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number-landing">3</div>
+                <h3>Eternize suas fotos</h3>
+                <p>Faça upload de todas as fotos dos seus momentos especiais e compartilhe.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefícios -->
+<section class="benefits">
+    <div class="container">
+        <h2 class="section-title">Benefícios do Memo</h2>
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <div class="benefit-icon">📸</div>
+                <h3>Upload Ilimitado</h3>
+                <p>Faça upload de quantas fotos quiser dos seus eventos sem limites.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">🔒</div>
+                <h3>Privacidade Total</h3>
+                <p>Controle a visibilidade dos seus eventos. Públicos ou privados, você decide.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">📅</div>
+                <h3>Organização Fácil</h3>
+                <p>Organize seus eventos por data, local e tipo. Encontre suas memórias facilmente.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">🌐</div>
+                <h3>Compartilhamento</h3>
+                <p>Compartilhe eventos públicos e permita que outros vejam suas experiências.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-landing">
+    <div class="container">
+        <h2>Pronto para começar?</h2>
+        <p>Junte-se ao Memo e comece a guardar suas memórias hoje mesmo!</p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-large">Criar Conta Grátis</a>
+    </div>
+</section>
+{% else %}
+<!-- Se já estiver logado, redireciona para dashboard -->
+<script>
+    window.location.href = "{{ url_for('dashboard') }}";
+</script>
+{% endif %}
+{% endblock %}
+

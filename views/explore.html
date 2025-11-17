@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Explorar Eventos - Memo{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/explore.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Explorar Eventos Públicos</h1>
+        <p>Descubra eventos públicos criados por outros usuários</p>
+    </div>
+
+    {% if events %}
+        <div class="events-grid">
+            {% for event in events %}
+                <div class="event-card">
+                    {% if event.cover_image %}
+                        <div class="event-image">
+                            <img src="{{ url_for('download_file', filename=event.cover_image) }}" alt="{{ event.title }}">
+                        </div>
+                    {% else %}
+                        <div class="event-image placeholder">
+                            <span>📷</span>
+                        </div>
+                    {% endif %}
+                    <div class="event-content">
+                        <h3><a href="{{ url_for('event_details', event_id=event.id) }}">{{ event.title }}</a></h3>
+                        <p class="event-meta">
+                            <span>📅 {{ event.date }}</span>
+                            <span>📍 {{ event.location }}</span>
+                            <span>👤 {{ event.user_name }}</span>
+                        </p>
+                        <p class="event-description">{{ event.description[:150] }}{% if event.description|length > 150 %}...{% endif %}</p>
+                        <a href="{{ url_for('event_details', event_id=event.id) }}" class="btn btn-primary">Ver Detalhes</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>Nenhum evento público encontrado no momento.</p>
+            {% if session.user_id %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Criar Meu Primeiro Evento</a>
+            {% else %}
+                <a href="{{ url_for('register') }}" class="btn btn-primary">Cadastrar-se</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
