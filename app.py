@@ -19,11 +19,17 @@ app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Inicializa o banco de dados (com tratamento de erro)
-try:
-    init_db()
-except Exception as e:
-    print(f"Aviso: Erro ao inicializar banco de dados: {e}")
-    print("O banco será inicializado na primeira requisição.")
+# No Vercel, a inicialização será feita na primeira requisição
+_db_initialized = False
+
+def ensure_db_initialized():
+    global _db_initialized
+    if not _db_initialized:
+        try:
+            init_db()
+            _db_initialized = True
+        except Exception as e:
+            print(f"Erro ao inicializar banco: {e}")
 
 # Cria a pasta de uploads se não existir
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -50,6 +56,7 @@ def home():
     """
     Página inicial do sistema.
     """
+    ensure_db_initialized()
     return render_template('home.html')
 
 
