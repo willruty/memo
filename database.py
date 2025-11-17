@@ -9,22 +9,25 @@ from werkzeug.security import generate_password_hash
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is required")
-
 def get_db():
     """
     Obtém conexão com o banco de dados Supabase PostgreSQL.
     """
-    parsed = urlparse(DATABASE_URL)
-    conn = psycopg2.connect(
-        database=parsed.path[1:],
-        user=parsed.username,
-        password=parsed.password,
-        host=parsed.hostname,
-        port=parsed.port
-    )
-    return conn
+    if not DATABASE_URL:
+        raise ValueError("DATABASE_URL environment variable is required. Configure no Vercel Dashboard > Settings > Environment Variables")
+    
+    try:
+        parsed = urlparse(DATABASE_URL)
+        conn = psycopg2.connect(
+            database=parsed.path[1:],
+            user=parsed.username,
+            password=parsed.password,
+            host=parsed.hostname,
+            port=parsed.port
+        )
+        return conn
+    except Exception as e:
+        raise ConnectionError(f"Erro ao conectar ao banco de dados: {e}. Verifique se DATABASE_URL está correto.")
 
 def init_db():
     """
