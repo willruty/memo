@@ -62,7 +62,10 @@ def home():
     """
     Página inicial do sistema.
     """
-    ensure_db_initialized()
+    try:
+        ensure_db_initialized()
+    except Exception as e:
+        print(f"DB init warning: {e}", file=sys.stderr)
     return render_template('home.html')
 
 
@@ -71,7 +74,12 @@ def explore():
     """
     Página de exploração de eventos públicos.
     """
-    events = Event.find_public_events(limit=20)
+    try:
+        ensure_db_initialized()
+        events = Event.find_public_events(limit=20)
+    except Exception as e:
+        print(f"Explore error: {e}", file=sys.stderr)
+        events = []
     return render_template('explore.html', events=events)
 
 
