@@ -2,6 +2,7 @@
 Módulo de configuração e inicialização do banco de dados Supabase PostgreSQL.
 """
 import os
+import sys
 import psycopg2
 from psycopg2.extras import DictCursor
 from urllib.parse import urlparse
@@ -14,7 +15,9 @@ def get_db():
     Obtém conexão com o banco de dados Supabase PostgreSQL.
     """
     if not DATABASE_URL:
-        raise ValueError("DATABASE_URL environment variable is required. Configure no Vercel Dashboard > Settings > Environment Variables")
+        error_msg = "DATABASE_URL environment variable is required. Configure no Vercel Dashboard > Settings > Environment Variables"
+        print(f"ERRO: {error_msg}", file=sys.stderr)
+        raise ValueError(error_msg)
     
     try:
         parsed = urlparse(DATABASE_URL)
@@ -27,6 +30,9 @@ def get_db():
         )
         return conn
     except Exception as e:
+        import traceback
+        error_msg = f"Erro ao conectar ao banco de dados: {e}\n{traceback.format_exc()}"
+        print(f"ERRO: {error_msg}", file=sys.stderr)
         raise ConnectionError(f"Erro ao conectar ao banco de dados: {e}. Verifique se DATABASE_URL está correto.")
 
 def init_db():

@@ -5,6 +5,7 @@ Gerencia todas as rotas e requisições HTTP.
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
 from functools import wraps
 import os
+import sys
 from database import init_db
 from controllers.auth_controller import AuthController
 from controllers.event_controller import EventController
@@ -29,7 +30,9 @@ def ensure_db_initialized():
             init_db()
             _db_initialized = True
         except Exception as e:
-            print(f"Erro ao inicializar banco: {e}")
+            import traceback
+            error_msg = f"Erro ao inicializar banco: {e}\n{traceback.format_exc()}"
+            print(error_msg, file=sys.stderr)
 
 # Cria a pasta de uploads se não existir
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
