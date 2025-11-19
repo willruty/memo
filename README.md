@@ -2,27 +2,6 @@
 
 Sistema web para criação e gerenciamento de eventos com upload de fotos, desenvolvido em Flask (Python).
 
-## Preparação do Projeto para Distribuição
-
-Antes de criar o ZIP do projeto, remova os seguintes arquivos e pastas:
-
-- `__pycache__/` (todas as pastas)
-- `*.pyc` (todos os arquivos compilados)
-- `memo.db` (banco de dados - será criado automaticamente)
-- `uploads/` (pasta de uploads - será criada automaticamente)
-- `.vercel/` (se existir - pasta de configuração da Vercel)
-- `venv/` ou `.venv/` (ambiente virtual - deve ser criado pelo usuário)
-
-O projeto deve incluir apenas:
-- Arquivos `.py` (código fonte)
-- Pasta `controllers/`
-- Pasta `models/`
-- Pasta `views/`
-- Pasta `static/` (CSS e imagens)
-- `requirements.txt`
-- `README.md`
-- `.gitignore`
-
 ## Pré-requisitos
 
 - Python 3.8 ou superior
@@ -34,22 +13,7 @@ O projeto deve incluir apenas:
 
 2. Abra o terminal/prompt de comando na pasta do projeto
 
-3. Crie um ambiente virtual (recomendado):
-```bash
-python -m venv venv
-```
-
-4. Ative o ambiente virtual:
-   - **Windows:**
-     ```bash
-     venv\Scripts\activate
-     ```
-   - **Linux/Mac:**
-     ```bash
-     source venv/bin/activate
-     ```
-
-5. Instale as dependências:
+3. Instale as dependências:
 ```bash
 pip install -r requirements.txt
 ```
@@ -146,7 +110,7 @@ memo/
 
 - **Backend:** Flask 3.0.0
 - **Banco de Dados:** SQLite
-- **Frontend:** HTML, CSS (Vanilla)
+- **Frontend:** HTML, CSS
 - **Upload de Arquivos:** Werkzeug
 
 ## Observações Importantes
