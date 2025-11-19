@@ -49,9 +49,8 @@ def migrate_db():
             cursor.execute('UPDATE photos SET user_id = (SELECT user_id FROM events WHERE events.id = photos.event_id LIMIT 1) WHERE user_id IS NULL')
         
         conn.commit()
-    except Exception as e:
+    except Exception:
         conn.rollback()
-        pass
 
 def init_db():
     conn = get_db()
@@ -168,24 +167,6 @@ def init_db():
     
     conn.commit()
 
-def create_sample_data():
-    conn = get_db()
-    cursor = get_cursor(conn)
-    
-    cursor.execute('SELECT COUNT(*) as count FROM users')
-    result = cursor.fetchone()
-    count = result['count'] if hasattr(result, 'keys') else result[0]
-    
-    if count == 0:
-        from werkzeug.security import generate_password_hash
-        password_hash = generate_password_hash('admin123')
-        cursor.execute('''
-            INSERT INTO users (name, email, password_hash)
-            VALUES (?, ?, ?)
-        ''', ('Usuário Admin', 'admin@memo.com', password_hash))
-        
-        conn.commit()
-
 def call_procedure_get_event_stats(event_id):
     conn = get_db()
     cursor = get_cursor(conn)
@@ -253,4 +234,3 @@ def call_procedure_get_user_activity(user_id):
 
 if __name__ == '__main__':
     init_db()
-    create_sample_data()

@@ -15,7 +15,7 @@
 
     {% if user_stats %}
     <div class="user-stats-section">
-        <h2>📊 Minhas Estatísticas</h2>
+        <h2>Minhas Estatísticas</h2>
         <div class="stats-grid">
             <div class="stat-card">
                 <span class="stat-value">{{ user_stats.total_events }}</span>
@@ -56,7 +56,7 @@
                             </div>
                         {% else %}
                             <div class="event-image placeholder">
-                                <span>📷</span>
+                                <span class="icon-photo">[FOTO]</span>
                             </div>
                         {% endif %}
                         <div class="event-menu-container">
@@ -65,12 +65,10 @@
                             </button>
                             <div class="event-menu-popup" id="menu-{{ event.id }}" style="display: none;">
                                 <a href="{{ url_for('edit_event', event_id=event.id) }}" class="event-menu-item">
-                                    <span>✏️</span>
                                     <span>Editar</span>
                                 </a>
                                 <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este evento?');" class="event-menu-item-form">
                                     <button type="submit" class="event-menu-item event-menu-item-danger">
-                                        <span>🗑️</span>
                                         <span>Excluir</span>
                                     </button>
                                 </form>
@@ -85,8 +83,8 @@
                             </span>
                         </div>
                         <p class="event-meta">
-                            <span>📅 {{ event.date }}</span>
-                            <span>📍 {{ event.location }}</span>
+                            <span>Data: {{ event.date }}</span>
+                            <span>Local: {{ event.location }}</span>
                         </p>
                         <p class="event-description">{{ event.description[:150] }}{% if event.description|length > 150 %}...{% endif %}</p>
                         <div class="event-actions">

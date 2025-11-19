@@ -40,8 +40,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 64px;
+    font-size: 14px;
+    font-weight: 700;
     background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.event-image.placeholder .icon-photo {
+    opacity: 0.6;
 }
 
 .event-content {
@@ -119,21 +127,25 @@
 }
 
 .popular-section .event-card::before {
-    content: '🔥';
+    content: '[POPULAR]';
     position: absolute;
     top: var(--spacing-sm);
     left: var(--spacing-sm);
     z-index: 10;
-    font-size: 24px;
+    font-size: 10px;
+    font-weight: 700;
     background: rgba(255, 255, 255, 0.95);
-    width: 40px;
-    height: 40px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: var(--shadow-md);
     animation: pulse 2s infinite;
+    color: #ff6b6b;
+    text-align: center;
+    padding: 4px;
 }
 
 @keyframes pulse {

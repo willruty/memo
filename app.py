@@ -321,6 +321,21 @@ def get_photo(photo_id):
         headers={'Content-Disposition': f'inline; filename="{photo.filename}"'}
     )
 
+@app.route('/photo/<int:photo_id>/download')
+def download_photo(photo_id):
+    from flask import Response
+    
+    photo = Photo.find_by_id(photo_id)
+    
+    if not photo or not photo.binary_data:
+        return "Foto não encontrada", 404
+    
+    return Response(
+        photo.binary_data,
+        mimetype=photo.content_type,
+        headers={'Content-Disposition': f'attachment; filename="{photo.filename}"'}
+    )
+
 @app.route('/download/<filename>')
 def download_file(filename):
     try:
@@ -331,6 +346,60 @@ def download_file(filename):
         )
     except Exception:
         return "Arquivo não encontrado", 404
+
+@app.route('/download/file/<filename>')
+def download_file_attachment(filename):
+    try:
+        return send_from_directory(
+            app.config['UPLOAD_FOLDER'],
+            filename,
+            as_attachment=True
+        )
+    except Exception:
+        return "Arquivo não encontrado", 404
+
+@app.route('/evento/<int:event_id>/download-all')
+def download_event_photos(event_id):
+    from flask import Response
+    import zipfile
+    import io
+    from models.photo import Photo
+    
+    event = Event.find_by_id(event_id)
+    if not event:
+        return "Evento não encontrado", 404
+    
+    user_id = session.get('user_id')
+    can_view, _ = EventController.can_view(event_id, user_id)
+    
+    if not can_view:
+        flash('Você não tem permissão para acessar este evento.', 'error')
+        if user_id:
+            return redirect(url_for('dashboard'))
+        else:
+            return redirect(url_for('explore'))
+    
+    photos = Photo.find_by_event(event_id)
+    
+    if not photos:
+        flash('Nenhuma foto encontrada para download.', 'error')
+        return redirect(url_for('event_details', event_id=event_id))
+    
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for photo in photos:
+            if photo.binary_data:
+                zip_file.writestr(photo.filename, photo.binary_data)
+    
+    zip_buffer.seek(0)
+    
+    return Response(
+        zip_buffer.getvalue(),
+        mimetype='application/zip',
+        headers={
+            'Content-Disposition': f'attachment; filename="evento_{event_id}_fotos.zip"'
+        }
+    )
 
 @app.route('/foto/<int:photo_id>/excluir', methods=['POST'])
 @login_required

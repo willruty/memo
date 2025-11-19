@@ -30,7 +30,6 @@ wheels/
 
 # Uploads
 uploads/*
-!uploads/.gitkeep
 
 # IDE
 .vscode/
@@ -45,5 +44,3 @@ Thumbs.db
 
 # Logs
 *.log
-
-.vercel

@@ -208,8 +208,16 @@
 }
 
 .benefit-icon {
-    font-size: 48px;
+    font-size: 12px;
+    font-weight: 700;
     margin-bottom: var(--spacing-md);
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: var(--spacing-md);
+    background: var(--primary-light);
+    border-radius: var(--border-radius);
+    display: inline-block;
 }
 
 .benefit-card h3 {

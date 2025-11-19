@@ -23,17 +23,24 @@
                 <img src="{{ url_for('download_file', filename=event.cover_image) }}" alt="Capa do evento" class="event-cover-image">
             {% else %}
                 <div class="event-cover-placeholder">
-                    <span class="cover-placeholder-icon">📷</span>
+                    <span class="cover-placeholder-icon">[FOTO]</span>
                     <p>Sem foto de capa</p>
                 </div>
             {% endif %}
         </div>
 
         <div class="event-detail-card">
-            <h1>{{ event.title }}</h1>
+            <div class="event-title-header">
+                <h1>{{ event.title }}</h1>
+                {% if photos %}
+                <a href="{{ url_for('download_event_photos', event_id=event.id) }}" class="btn btn-download-all" title="Baixar todas as fotos">
+                    <span class="icon-download">↓</span> Baixar Todas as Fotos (ZIP)
+                </a>
+                {% endif %}
+            </div>
             <div class="event-meta-detail">
-                <span>📅 {{ event.date }}</span>
-                <span>📍 {{ event.location }}</span>
+                <span class="icon-date">Data:</span> <span>{{ event.date }}</span>
+                <span class="icon-location">Local:</span> <span>{{ event.location }}</span>
                 <span class="badge badge-{{ 'public' if event.visibility == 'public' else 'private' }}">
                     {{ 'Público' if event.visibility == 'public' else 'Privado' }}
                 </span>
@@ -95,11 +102,14 @@
                             <a href="{{ url_for('get_photo', photo_id=photo.id) }}" target="_blank">
                                 <img src="{{ url_for('get_photo', photo_id=photo.id) }}" alt="Foto do evento">
                             </a>
-                            {% if session.user_id and event.user_id == session.user_id %}
-                                <form method="POST" action="{{ url_for('delete_photo', photo_id=photo.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir esta foto?');">
-                                    <button type="submit" class="btn-delete-photo" title="Excluir foto">×</button>
-                                </form>
-                            {% endif %}
+                            <div class="photo-actions">
+                                <a href="{{ url_for('download_photo', photo_id=photo.id) }}" class="btn-download-photo" title="Baixar foto">↓</a>
+                                {% if session.user_id and event.user_id == session.user_id %}
+                                    <form method="POST" action="{{ url_for('delete_photo', photo_id=photo.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir esta foto?');" class="photo-delete-form">
+                                        <button type="submit" class="btn-delete-photo" title="Excluir foto">×</button>
+                                    </form>
+                                {% endif %}
+                            </div>
                         </div>
                     {% endfor %}
                 </div>
