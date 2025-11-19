@@ -8,7 +8,6 @@
 
 {% block content %}
 {% if not session.user_id %}
-<!-- Hero Section -->
 <section class="hero-landing">
     <div class="container">
         <div class="hero-landing-content">
@@ -34,7 +33,6 @@
     </div>
 </section>
 
-<!-- Como Funciona - 3 Passos -->
 <section class="how-it-works-landing">
     <div class="container">
         <h2 class="section-title">Como Funciona</h2>
@@ -58,7 +56,6 @@
     </div>
 </section>
 
-<!-- Benefícios -->
 <section class="benefits">
     <div class="container">
         <h2 class="section-title">Benefícios do Memo</h2>
@@ -87,7 +84,6 @@
     </div>
 </section>
 
-<!-- CTA -->
 <section class="cta-landing">
     <div class="container">
         <h2>Pronto para começar?</h2>
@@ -96,7 +92,6 @@
     </div>
 </section>
 {% else %}
-<!-- Se já estiver logado, redireciona para dashboard -->
 <script>
     window.location.href = "{{ url_for('dashboard') }}";
 </script>

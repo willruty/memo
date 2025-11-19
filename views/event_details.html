@@ -18,7 +18,6 @@
             {% endif %}
         </div>
 
-        <!-- Cover Image - Estilo LinkedIn -->
         <div class="event-cover-container">
             {% if event.cover_image %}
                 <img src="{{ url_for('download_file', filename=event.cover_image) }}" alt="Capa do evento" class="event-cover-image">
@@ -39,6 +38,26 @@
                     {{ 'Público' if event.visibility == 'public' else 'Privado' }}
                 </span>
             </div>
+            {% if event_stats %}
+            <div class="event-stats-detail">
+                <div class="stat-item">
+                    <span class="stat-value">{{ event_stats.total_photos }}</span>
+                    <span class="stat-label">Fotos</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ event_stats.total_comments }}</span>
+                    <span class="stat-label">Comentários</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ event_stats.total_likes }}</span>
+                    <span class="stat-label">Curtidas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ event_stats.total_participants }}</span>
+                    <span class="stat-label">Participantes</span>
+                </div>
+            </div>
+            {% endif %}
             <div class="event-description-full">
                 <p>{{ event.description }}</p>
             </div>

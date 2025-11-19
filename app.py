@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
 from functools import wraps
 import os
-import sys
-from database import init_db
+from database import init_db, close_db
 from controllers.auth_controller import AuthController
 from controllers.event_controller import EventController
 from controllers.photo_controller import PhotoController
@@ -16,6 +15,10 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 _db_initialized = False
 
+@app.teardown_appcontext
+def close_db_connection(error):
+    close_db()
+
 def ensure_db_initialized():
     global _db_initialized
     if not _db_initialized:
@@ -23,14 +26,13 @@ def ensure_db_initialized():
             init_db()
             _db_initialized = True
         except Exception as e:
-            print(f"⚠️  Aviso: Erro ao inicializar banco: {e}", file=sys.stderr)
+            pass
 
-if not os.path.exists(app.config['UPLOAD_FOLDER']) and not os.getenv('VERCEL'):
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
     try:
         os.makedirs(app.config['UPLOAD_FOLDER'])
     except:
         pass
-
 
 def login_required(f):
     @wraps(f)
@@ -41,34 +43,37 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-
 @app.route('/')
 def home():
     try:
         ensure_db_initialized()
-    except Exception as e:
-        print(f"DB init warning: {e}", file=sys.stderr)
+    except:
+        pass
     return render_template('home.html')
-
 
 @app.route('/explorar')
 def explore():
     try:
         ensure_db_initialized()
         events = Event.find_public_events(limit=20)
-    except Exception as e:
-        print(f"Explore error: {e}", file=sys.stderr)
+        popular_events = Event.find_popular_events(limit=5)
+    except:
         events = []
-    return render_template('explore.html', events=events)
-
+        popular_events = []
+    return render_template('explore.html', events=events, popular_events=popular_events)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    ensure_db_initialized()
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         
-        success, message, user = AuthController.login(email, password)
+        try:
+            success, message, user = AuthController.login(email, password)
+        except Exception as e:
+            flash('Erro ao processar login. Tente novamente.', 'error')
+            return render_template('login.html')
         
         if success and user:
             session['user_id'] = user.id
@@ -84,16 +89,20 @@ def login():
     
     return render_template('login.html')
 
-
 @app.route('/cadastro', methods=['GET', 'POST'])
 def register():
+    ensure_db_initialized()
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
         
-        success, message, user = AuthController.register(name, email, password, confirm_password)
+        try:
+            success, message, user = AuthController.register(name, email, password, confirm_password)
+        except Exception as e:
+            flash('Erro ao processar cadastro. Tente novamente.', 'error')
+            return render_template('register.html')
         
         if success and user:
             flash(message, 'success')
@@ -105,7 +114,6 @@ def register():
         return redirect(url_for('dashboard'))
     
     return render_template('register.html')
-
 
 @app.route('/redefinir-senha', methods=['GET', 'POST'])
 def reset_password():
@@ -124,21 +132,20 @@ def reset_password():
     
     return render_template('reset_password.html')
 
-
 @app.route('/logout')
 def logout():
     session.clear()
     flash('Logout realizado com sucesso!', 'success')
     return redirect(url_for('home'))
 
-
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    from database import call_procedure_get_user_activity
     user_id = session['user_id']
     events = Event.find_by_user(user_id)
-    return render_template('dashboard.html', events=events)
-
+    user_stats = call_procedure_get_user_activity(user_id)
+    return render_template('dashboard.html', events=events, user_stats=user_stats)
 
 @app.route('/evento/criar', methods=['GET', 'POST'])
 @login_required
@@ -175,9 +182,9 @@ def create_event():
     
     return render_template('create_event.html')
 
-
 @app.route('/evento/<int:event_id>')
 def event_details(event_id):
+    from database import call_procedure_get_event_stats
     user_id = session.get('user_id')
     can_view, event = EventController.can_view(event_id, user_id)
     
@@ -189,8 +196,8 @@ def event_details(event_id):
             return redirect(url_for('explore'))
     
     photos = Photo.find_by_event(event_id)
-    return render_template('event_details.html', event=event, photos=photos)
-
+    event_stats = call_procedure_get_event_stats(event_id)
+    return render_template('event_details.html', event=event, photos=photos, event_stats=event_stats)
 
 @app.route('/evento/<int:event_id>/editar', methods=['GET', 'POST'])
 @login_required
@@ -238,7 +245,6 @@ def edit_event(event_id):
     
     return render_template('edit_event.html', event=event)
 
-
 @app.route('/evento/<int:event_id>/excluir', methods=['POST'])
 @login_required
 def delete_event(event_id):
@@ -252,7 +258,6 @@ def delete_event(event_id):
         flash(message, 'error')
     
     return redirect(url_for('dashboard'))
-
 
 @app.route('/evento/<int:event_id>/upload', methods=['POST'])
 @login_required
@@ -301,7 +306,6 @@ def upload_photo(event_id):
     
     return redirect(url_for('event_details', event_id=event_id))
 
-
 @app.route('/photo/<int:photo_id>')
 def get_photo(photo_id):
     from flask import Response
@@ -317,7 +321,6 @@ def get_photo(photo_id):
         headers={'Content-Disposition': f'inline; filename="{photo.filename}"'}
     )
 
-
 @app.route('/download/<filename>')
 def download_file(filename):
     try:
@@ -328,7 +331,6 @@ def download_file(filename):
         )
     except Exception:
         return "Arquivo não encontrado", 404
-
 
 @app.route('/foto/<int:photo_id>/excluir', methods=['POST'])
 @login_required
@@ -351,7 +353,6 @@ def delete_photo(photo_id):
     
     return redirect(url_for('event_details', event_id=photo.event_id))
 
-
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)

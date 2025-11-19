@@ -13,6 +13,38 @@
         <a href="{{ url_for('create_event') }}" class="btn btn-primary">+ Criar Novo Evento</a>
     </div>
 
+    {% if user_stats %}
+    <div class="user-stats-section">
+        <h2>📊 Minhas Estatísticas</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value">{{ user_stats.total_events }}</span>
+                <span class="stat-label">Eventos Criados</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ user_stats.total_photos }}</span>
+                <span class="stat-label">Fotos Enviadas</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ user_stats.total_comments }}</span>
+                <span class="stat-label">Comentários</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ user_stats.total_likes_given }}</span>
+                <span class="stat-label">Curtidas Dadas</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ user_stats.total_following }}</span>
+                <span class="stat-label">Seguindo</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ user_stats.total_followers }}</span>
+                <span class="stat-label">Seguidores</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     {% if events %}
         <div class="events-grid">
             {% for event in events %}

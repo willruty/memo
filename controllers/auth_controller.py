@@ -1,5 +1,4 @@
 from models.user import User
-from werkzeug.security import generate_password_hash
 import re
 
 class AuthController:
@@ -8,7 +7,6 @@ class AuthController:
     def validate_email(email):
         if not email or not isinstance(email, str):
             return False
-        
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         return bool(re.match(pattern, email))
     
@@ -95,44 +93,3 @@ class AuthController:
         else:
             return False, "Erro ao redefinir senha. Tente novamente."
     
-    @staticmethod
-    def get_user_by_id(user_id):
-        return User.find_by_id(user_id)
-    
-    @staticmethod
-    def update_profile(user_id, name, email):
-        user = User.find_by_id(user_id)
-        if not user:
-            return False, "Usuário não encontrado.", None
-        
-        if not AuthController.validate_name(name):
-            return False, "Nome deve ter no mínimo 3 caracteres.", None
-        
-        if not AuthController.validate_email(email):
-            return False, "Email inválido.", None
-        
-        if user.update_profile(name, email):
-            updated_user = User.find_by_id(user_id)
-            return True, "Perfil atualizado com sucesso!", updated_user
-        else:
-            return False, "Erro ao atualizar perfil. Email já está em uso.", None
-    
-    @staticmethod
-    def change_password(user_id, current_password, new_password, confirm_password):
-        user = User.find_by_id(user_id)
-        if not user:
-            return False, "Usuário não encontrado."
-        
-        if not user.verify_password(current_password):
-            return False, "Senha atual incorreta."
-        
-        if not AuthController.validate_password(new_password):
-            return False, "Senha deve ter no mínimo 6 caracteres."
-        
-        if new_password != confirm_password:
-            return False, "As senhas não coincidem."
-        
-        if user.update_password(new_password):
-            return True, "Senha alterada com sucesso!"
-        else:
-            return False, "Erro ao alterar senha. Tente novamente."

@@ -1,5 +1,4 @@
 from database import get_db, get_cursor
-import psycopg2
 
 class Photo:
     
@@ -12,27 +11,24 @@ class Photo:
         self.uploaded_at = uploaded_at
     
     @staticmethod
-    def create(event_id, filename, binary_data, content_type='image/jpeg'):
+    def create(event_id, user_id, filename, binary_data, content_type='image/jpeg'):
         conn = get_db()
         cursor = get_cursor(conn)
         
         try:
             cursor.execute('''
-                INSERT INTO photos (event_id, filename, binary_data, content_type)
-                VALUES (%s, %s, %s, %s)
-                RETURNING id
-            ''', (event_id, filename, psycopg2.Binary(binary_data), content_type))
-            result = cursor.fetchone()
-            photo_id = result['id'] if isinstance(result, dict) else result[0]
+                INSERT INTO photos (event_id, user_id, filename, binary_data, content_type)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (event_id, user_id, filename, binary_data, content_type))
+            photo_id = cursor.lastrowid
             
             conn.commit()
             
-            cursor.execute('SELECT * FROM photos WHERE id = %s', (photo_id,))
+            cursor.execute('SELECT * FROM photos WHERE id = ?', (photo_id,))
             row = cursor.fetchone()
-            conn.close()
             
             if row:
-                binary_data = row.get('binary_data')
+                binary_data = row['binary_data']
                 if binary_data is not None:
                     if isinstance(binary_data, memoryview):
                         binary_data = bytes(binary_data)
@@ -44,12 +40,11 @@ class Photo:
                     event_id=row['event_id'],
                     filename=row['filename'],
                     binary_data=binary_data,
-                    content_type=row.get('content_type', 'image/jpeg'),
+                    content_type=row['content_type'] if row['content_type'] else 'image/jpeg',
                     uploaded_at=row['uploaded_at']
                 )
             return None
         except Exception as e:
-            conn.close()
             return None
     
     @staticmethod
@@ -57,12 +52,11 @@ class Photo:
         conn = get_db()
         cursor = get_cursor(conn)
         
-        cursor.execute('SELECT * FROM photos WHERE id = %s', (photo_id,))
+        cursor.execute('SELECT * FROM photos WHERE id = ?', (photo_id,))
         row = cursor.fetchone()
-        conn.close()
         
         if row:
-            binary_data = row.get('binary_data')
+            binary_data = row['binary_data']
             if binary_data is not None:
                 if isinstance(binary_data, memoryview):
                     binary_data = bytes(binary_data)
@@ -74,7 +68,7 @@ class Photo:
                 event_id=row['event_id'],
                 filename=row['filename'],
                 binary_data=binary_data,
-                content_type=row.get('content_type', 'image/jpeg'),
+                content_type=row['content_type'] if row['content_type'] else 'image/jpeg',
                 uploaded_at=row['uploaded_at']
             )
         return None
@@ -86,16 +80,15 @@ class Photo:
         
         cursor.execute('''
             SELECT * FROM photos 
-            WHERE event_id = %s 
+            WHERE event_id = ? 
             ORDER BY uploaded_at DESC
         ''', (event_id,))
         
         rows = cursor.fetchall()
-        conn.close()
         
         photos = []
         for row in rows:
-            binary_data = row.get('binary_data')
+            binary_data = row['binary_data']
             if binary_data is not None:
                 if isinstance(binary_data, memoryview):
                     binary_data = bytes(binary_data)
@@ -107,7 +100,7 @@ class Photo:
                 event_id=row['event_id'],
                 filename=row['filename'],
                 binary_data=binary_data,
-                content_type=row.get('content_type', 'image/jpeg'),
+                content_type=row['content_type'] if row['content_type'] else 'image/jpeg',
                 uploaded_at=row['uploaded_at']
             ))
         
@@ -117,7 +110,6 @@ class Photo:
         conn = get_db()
         cursor = get_cursor(conn)
         
-        cursor.execute('DELETE FROM photos WHERE id = %s', (self.id,))
+        cursor.execute('DELETE FROM photos WHERE id = ?', (self.id,))
         conn.commit()
-        conn.close()
         return True

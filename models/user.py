@@ -1,6 +1,6 @@
 from database import get_db, get_cursor
 from werkzeug.security import check_password_hash, generate_password_hash
-import psycopg2
+import sqlite3
 
 class User:
     
@@ -21,17 +21,14 @@ class User:
             
             cursor.execute('''
                 INSERT INTO users (name, email, password_hash)
-                VALUES (%s, %s, %s)
-                RETURNING id
+                VALUES (?, ?, ?)
             ''', (name, email, password_hash))
-            result = cursor.fetchone()
-            user_id = result['id'] if isinstance(result, dict) else result[0]
+            user_id = cursor.lastrowid
             
             conn.commit()
             
-            cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
+            cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
             row = cursor.fetchone()
-            conn.close()
             
             if row:
                 return User(
@@ -42,37 +39,37 @@ class User:
                     created_at=row['created_at']
                 )
             return None
-        except psycopg2.IntegrityError:
-            conn.close()
+        except sqlite3.IntegrityError:
             return None
     
     @staticmethod
     def find_by_email(email):
-        conn = get_db()
-        cursor = get_cursor(conn)
-        
-        cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            return User(
-                id=row['id'],
-                name=row['name'],
-                email=row['email'],
-                password_hash=row['password_hash'],
-                created_at=row['created_at']
-            )
-        return None
+        try:
+            conn = get_db()
+            cursor = get_cursor(conn)
+            
+            cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
+            row = cursor.fetchone()
+            
+            if row:
+                return User(
+                    id=row['id'],
+                    name=row['name'],
+                    email=row['email'],
+                    password_hash=row['password_hash'],
+                    created_at=row['created_at']
+                )
+            return None
+        except Exception as e:
+            raise
     
     @staticmethod
     def find_by_id(user_id):
         conn = get_db()
         cursor = get_cursor(conn)
         
-        cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
+        cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
         row = cursor.fetchone()
-        conn.close()
         
         if row:
             return User(
@@ -93,37 +90,8 @@ class User:
         
         password_hash = generate_password_hash(new_password)
         cursor.execute('''
-            UPDATE users SET password_hash = %s WHERE id = %s
+            UPDATE users SET password_hash = ? WHERE id = ?
         ''', (password_hash, self.id))
         
         conn.commit()
-        conn.close()
-        return True
-    
-    def update_profile(self, name, email):
-        conn = get_db()
-        cursor = get_cursor(conn)
-        
-        try:
-            cursor.execute('''
-                UPDATE users SET name = %s, email = %s WHERE id = %s
-            ''', (name, email, self.id))
-            
-            conn.commit()
-            conn.close()
-            
-            self.name = name
-            self.email = email
-            return True
-        except psycopg2.IntegrityError:
-            conn.close()
-            return False
-    
-    def delete(self):
-        conn = get_db()
-        cursor = get_cursor(conn)
-        
-        cursor.execute('DELETE FROM users WHERE id = %s', (self.id,))
-        conn.commit()
-        conn.close()
         return True

@@ -50,7 +50,7 @@ class PhotoController:
             original_filename = secure_filename(file.filename)
             unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
             
-            photo = Photo.create(event_id, unique_filename, binary_data, content_type)
+            photo = Photo.create(event_id, user_id, unique_filename, binary_data, content_type)
             
             if photo:
                 return True, "Foto enviada com sucesso!", photo

@@ -23,17 +23,14 @@ class Event:
         try:
             cursor.execute('''
                 INSERT INTO events (user_id, title, description, location, date, visibility, cover_image)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                RETURNING id
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (user_id, title, description, location, date, visibility, cover_image))
-            result = cursor.fetchone()
-            event_id = result['id'] if isinstance(result, dict) else result[0]
+            event_id = cursor.lastrowid
             
             conn.commit()
             
-            cursor.execute('SELECT * FROM events WHERE id = %s', (event_id,))
+            cursor.execute('SELECT * FROM events WHERE id = ?', (event_id,))
             row = cursor.fetchone()
-            conn.close()
             
             if row:
                 return Event(
@@ -49,7 +46,6 @@ class Event:
                 )
             return None
         except Exception as e:
-            conn.close()
             return None
     
     @staticmethod
@@ -57,9 +53,8 @@ class Event:
         conn = get_db()
         cursor = get_cursor(conn)
         
-        cursor.execute('SELECT * FROM events WHERE id = %s', (event_id,))
+        cursor.execute('SELECT * FROM events WHERE id = ?', (event_id,))
         row = cursor.fetchone()
-        conn.close()
         
         if row:
             return Event(
@@ -82,12 +77,11 @@ class Event:
         
         cursor.execute('''
             SELECT * FROM events 
-            WHERE user_id = %s 
+            WHERE user_id = ? 
             ORDER BY date DESC, created_at DESC
         ''', (user_id,))
         
         rows = cursor.fetchall()
-        conn.close()
         
         events = []
         for row in rows:
@@ -111,16 +105,18 @@ class Event:
         cursor = get_cursor(conn)
         
         cursor.execute('''
-            SELECT e.*, u.name as user_name 
+            SELECT e.*, u.name as user_name,
+                   (SELECT COUNT(*) FROM likes WHERE event_id = e.id) as likes_count,
+                   (SELECT COUNT(*) FROM comments WHERE event_id = e.id) as comments_count,
+                   (SELECT COUNT(*) FROM photos WHERE event_id = e.id) as photos_count
             FROM events e
             JOIN users u ON e.user_id = u.id
             WHERE e.visibility = 'public'
             ORDER BY e.date DESC, e.created_at DESC
-            LIMIT %s
+            LIMIT ?
         ''', (limit,))
         
         rows = cursor.fetchall()
-        conn.close()
         
         events = []
         for row in rows:
@@ -136,6 +132,55 @@ class Event:
                 created_at=row['created_at']
             )
             event.user_name = row['user_name']
+            event.likes_count = row['likes_count']
+            event.comments_count = row['comments_count']
+            event.photos_count = row['photos_count']
+            events.append(event)
+        
+        return events
+    
+    @staticmethod
+    def find_popular_events(limit=10):
+        conn = get_db()
+        cursor = get_cursor(conn)
+        
+        cursor.execute('''
+            SELECT e.*, u.name as user_name,
+                   COUNT(DISTINCT l.id) as likes_count,
+                   COUNT(DISTINCT c.id) as comments_count,
+                   COUNT(DISTINCT p.id) as photos_count,
+                   (COUNT(DISTINCT l.id) + COUNT(DISTINCT c.id) * 2 + COUNT(DISTINCT p.id)) as popularity_score
+            FROM events e
+            JOIN users u ON e.user_id = u.id
+            LEFT JOIN likes l ON e.id = l.event_id
+            LEFT JOIN comments c ON e.id = c.event_id
+            LEFT JOIN photos p ON e.id = p.event_id
+            WHERE e.visibility = 'public'
+            GROUP BY e.id, e.title, e.description, e.location, e.date, e.visibility, e.cover_image, e.created_at, e.user_id, u.name
+            ORDER BY popularity_score DESC, e.date DESC
+            LIMIT ?
+        ''', (limit,))
+        
+        rows = cursor.fetchall()
+        
+        events = []
+        for row in rows:
+            event = Event(
+                id=row['id'],
+                user_id=row['user_id'],
+                title=row['title'],
+                description=row['description'],
+                location=row['location'],
+                date=row['date'],
+                visibility=row['visibility'],
+                cover_image=row['cover_image'],
+                created_at=row['created_at']
+            )
+            event.user_name = row['user_name']
+            event.likes_count = row['likes_count']
+            event.comments_count = row['comments_count']
+            event.photos_count = row['photos_count']
+            event.popularity_score = row['popularity_score']
             events.append(event)
         
         return events
@@ -148,19 +193,18 @@ class Event:
             if cover_image:
                 cursor.execute('''
                     UPDATE events 
-                    SET title = %s, description = %s, location = %s, date = %s, 
-                        visibility = %s, cover_image = %s
-                    WHERE id = %s
+                    SET title = ?, description = ?, location = ?, date = ?, 
+                        visibility = ?, cover_image = ?
+                    WHERE id = ?
                 ''', (title, description, location, date, visibility, cover_image, self.id))
             else:
                 cursor.execute('''
                     UPDATE events 
-                    SET title = %s, description = %s, location = %s, date = %s, visibility = %s
-                    WHERE id = %s
+                    SET title = ?, description = ?, location = ?, date = ?, visibility = ?
+                    WHERE id = ?
                 ''', (title, description, location, date, visibility, self.id))
             
             conn.commit()
-            conn.close()
             
             self.title = title
             self.description = description
@@ -172,16 +216,14 @@ class Event:
             
             return True
         except Exception as e:
-            conn.close()
             return False
     
     def delete(self):
         conn = get_db()
         cursor = get_cursor(conn)
         
-        cursor.execute('DELETE FROM events WHERE id = %s', (self.id,))
+        cursor.execute('DELETE FROM events WHERE id = ?', (self.id,))
         conn.commit()
-        conn.close()
         return True
     
     def is_owner(self, user_id):
